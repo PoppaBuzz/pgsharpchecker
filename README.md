@@ -44,7 +44,7 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 3. Build and run on your device
 
 ```bash
-git clone https://github.com/jPHatDesigns/pgsharpchecker.git
+git clone https://github.com/PoppaBuzz/pgsharpchecker.git
 cd pgsharpchecker
 ```
 
