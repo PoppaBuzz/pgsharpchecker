@@ -58,8 +58,31 @@
         android:text="@string/never_checked"
         android:textSize="12sp"
         android:textColor="?android:textColorSecondary"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="8dp"
         android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/tvNextCheck"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/next_check_disabled"
+        android:textSize="12sp"
+        android:textColor="?android:textColorSecondary"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btnDownloadUpdate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_download_update"
+        android:textSize="16sp"
+        android:minHeight="48dp"
+        android:minWidth="200dp"
+        android:paddingHorizontal="24dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone"/>
 
     <Button
         android:id="@+id/btnCheckNow"
@@ -78,6 +101,17 @@
         android:layout_height="wrap_content"
         android:text="@string/btn_enable_auto"
         android:textSize="16sp"
+        android:minHeight="48dp"
+        android:minWidth="200dp"
+        android:paddingHorizontal="24dp"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btnScheduleChecks"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_schedule_checks"
+        android:textSize="14sp"
         android:minHeight="48dp"
         android:minWidth="200dp"
         android:paddingHorizontal="24dp"/>

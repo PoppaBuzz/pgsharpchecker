@@ -30,6 +30,11 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name=".ScheduledChecksActivity"
+            android:exported="false"
+            android:label="@string/scheduled_checks_title" />
+        
         <!-- WorkManager initialization -->
         <provider
             android:name="androidx.startup.InitializationProvider"

@@ -10,7 +10,14 @@
     <string name="btn_check_now">Check for Updates Now</string>
     <string name="btn_enable_auto">Enable Automatic Checking</string>
     <string name="btn_auto_enabled">Automatic Checking Enabled</string>
+    <string name="btn_schedule_checks">Schedule Specific Times</string>
     <string name="note_auto_check">Note: Automatic checks run every 12 hours in the background</string>
+    <string name="scheduled_checks_title">Scheduled Checks</string>
+    <string name="scheduled_checks_description">Set up to 4 specific times per day to check for updates</string>
+    <string name="btn_add_time">Add Time</string>
+    <string name="btn_save_schedule">Save Schedule</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_remove">Remove</string>
     <string name="disclaimer">Disclaimer: This app is not affiliated with, endorsed by, or connected to Niantic, Pokemon Go, or PGSharp. It is an independent tool created for informational purposes only.</string>
     
     <!-- Status Messages -->
@@ -26,6 +33,9 @@
     <string name="auto_check_disabled_status">Auto-check disabled. Use \'Check Now\' for manual checks.</string>
     <string name="never_checked">Never checked</string>
     <string name="last_checked">Last checked: %1$s</string>
+    <string name="next_check_disabled">Auto-check disabled</string>
+    <string name="next_check">Next check: %1$s</string>
+    <string name="btn_download_update">Download Update from PGSharp</string>
     
     <!-- Toast Messages -->
     <string name="pokemon_go_not_found_toast">Pokemon Go app not found on device</string>

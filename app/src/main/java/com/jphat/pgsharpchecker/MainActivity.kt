@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.work.*
 import java.util.concurrent.TimeUnit
 
@@ -19,10 +20,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvLatestVersion: TextView
     private lateinit var tvStatus: TextView
     private lateinit var tvLastChecked: TextView
+    private lateinit var tvNextCheck: TextView
     private lateinit var btnCheckNow: Button
     private lateinit var btnEnableAutoCheck: Button
+    private lateinit var btnDownloadUpdate: Button
+    private lateinit var btnScheduleChecks: Button
     
     private var isAutoCheckEnabled = false
+    private var updateAvailable = false
     
     companion object {
         private const val NOTIFICATION_PERMISSION_CODE = 100
@@ -30,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "PGSharpCheckerPrefs"
         private const val KEY_AUTO_CHECK_ENABLED = "auto_check_enabled"
         private const val KEY_LAST_CHECK_TIME = "last_check_time"
+        private const val CHECK_INTERVAL_HOURS = 12L
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,8 +47,11 @@ class MainActivity : AppCompatActivity() {
         tvLatestVersion = findViewById(R.id.tvLatestVersion)
         tvStatus = findViewById(R.id.tvStatus)
         tvLastChecked = findViewById(R.id.tvLastChecked)
+        tvNextCheck = findViewById(R.id.tvNextCheck)
         btnCheckNow = findViewById(R.id.btnCheckNow)
         btnEnableAutoCheck = findViewById(R.id.btnEnableAutoCheck)
+        btnDownloadUpdate = findViewById(R.id.btnDownloadUpdate)
+        btnScheduleChecks = findViewById(R.id.btnScheduleChecks)
         
         // Request notification permission for Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -67,6 +76,19 @@ class MainActivity : AppCompatActivity() {
         
         // Display last check time
         displayLastCheckTime()
+        
+        // Display next check time
+        displayNextCheckTime()
+        
+        // Download button click
+        btnDownloadUpdate.setOnClickListener {
+            openPGSharpWebsite()
+        }
+        
+        // Schedule checks button
+        btnScheduleChecks.setOnClickListener {
+            startActivity(android.content.Intent(this, ScheduledChecksActivity::class.java))
+        }
         
         // Manual check button
         btnCheckNow.setOnClickListener {
@@ -128,19 +150,24 @@ class MainActivity : AppCompatActivity() {
                         WorkInfo.State.SUCCEEDED -> {
                             val latestVersion = workInfo.outputData.getString("latest_version")
                             val installedVersion = workInfo.outputData.getString("installed_version")
-                            val updateAvailable = workInfo.outputData.getBoolean("update_available", false)
+                            updateAvailable = workInfo.outputData.getBoolean("update_available", false)
                             
+                            // Update the installed version display with the fresh data from the check
+                            tvInstalledVersion.text = getString(R.string.installed_pokemon_go, installedVersion)
                             tvLatestVersion.text = getString(R.string.latest_on_pgsharp, latestVersion)
                             
                             if (updateAvailable) {
                                 tvStatus.text = getString(R.string.newer_version_available, installedVersion, latestVersion)
+                                btnDownloadUpdate.visibility = android.view.View.VISIBLE
                             } else {
                                 tvStatus.text = getString(R.string.version_matches)
+                                btnDownloadUpdate.visibility = android.view.View.GONE
                             }
                             
                             // Save and display last check time
                             saveLastCheckTime()
                             displayLastCheckTime()
+                            displayNextCheckTime()
                         }
                         WorkInfo.State.FAILED -> {
                             tvStatus.text = getString(R.string.check_failed)
@@ -224,6 +251,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    private fun displayNextCheckTime() {
+        if (!isAutoCheckEnabled) {
+            tvNextCheck.visibility = android.view.View.GONE
+            return
+        }
+        
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val lastCheckTime = prefs.getLong(KEY_LAST_CHECK_TIME, 0)
+        
+        if (lastCheckTime == 0L) {
+            tvNextCheck.visibility = android.view.View.GONE
+            return
+        }
+        
+        val nextCheckTime = lastCheckTime + (CHECK_INTERVAL_HOURS * 3600000)
+        val now = System.currentTimeMillis()
+        
+        if (nextCheckTime > now) {
+            val timeUntil = getTimeUntil(nextCheckTime)
+            tvNextCheck.text = getString(R.string.next_check, timeUntil)
+            tvNextCheck.visibility = android.view.View.VISIBLE
+        } else {
+            tvNextCheck.text = getString(R.string.next_check, "soon")
+            tvNextCheck.visibility = android.view.View.VISIBLE
+        }
+    }
+    
+    private fun getTimeUntil(timeMillis: Long): String {
+        val now = System.currentTimeMillis()
+        val diff = timeMillis - now
+        
+        return when {
+            diff < 60000 -> "in less than a minute"
+            diff < 3600000 -> "in ${diff / 60000} minutes"
+            diff < 86400000 -> "in ${diff / 3600000} hours"
+            else -> "in ${diff / 86400000} days"
+        }
+    }
+    
+    private fun openPGSharpWebsite() {
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+        intent.data = "https://www.pgsharp.com".toUri()
+        startActivity(intent)
+    }
+    
     private fun updateAutoCheckButton() {
         if (isAutoCheckEnabled) {
             btnEnableAutoCheck.text = getString(R.string.btn_auto_enabled)
@@ -255,6 +327,7 @@ class MainActivity : AppCompatActivity() {
         
         saveAutoCheckState(true)
         updateAutoCheckButton()
+        displayNextCheckTime()
         
         Toast.makeText(
             this, 
@@ -270,6 +343,7 @@ class MainActivity : AppCompatActivity() {
         
         saveAutoCheckState(false)
         updateAutoCheckButton()
+        displayNextCheckTime()
         
         Toast.makeText(
             this, 
