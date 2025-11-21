@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Material 3 Light Theme Colors -->
-    <color name="md_theme_primary">#FFD700</color>
+    <color name="md_theme_primary">#FFD700</color> <!-- Gold from logo -->
     <color name="md_theme_onPrimary">#000000</color>
     <color name="md_theme_primaryContainer">#FFF8DC</color>
     <color name="md_theme_onPrimaryContainer">#1A1A00</color>
 
-    <color name="md_theme_secondary">#0099FF</color>
+    <color name="md_theme_secondary">#0099FF</color> <!-- Blue from logo -->
     <color name="md_theme_onSecondary">#FFFFFF</color>
     <color name="md_theme_secondaryContainer">#D0E8FF</color>
     <color name="md_theme_onSecondaryContainer">#001D33</color>
 
-    <color name="md_theme_surface">#1A1A1A</color>
+    <color name="md_theme_surface">#1A1A1A</color> <!-- Dark surface -->
     <color name="md_theme_onSurface">#E6E6E6</color>
     <color name="md_theme_surfaceVariant">#2A2A2A</color>
     <color name="md_theme_onSurfaceVariant">#C4C4C4</color>
@@ -26,20 +26,4 @@
     <color name="status_warning">#FF9800</color>
     <color name="status_error">#F44336</color>
     <color name="status_info">#2196F3</color>
-    
-    <!-- Legacy Colors (for compatibility) -->
-    <color name="primary">#1976D2</color>
-    <color name="primary_dark">#1565C0</color>
-    <color name="accent">#4CAF50</color>
-    
-    <color name="background_light">#FFFFFF</color>
-    <color name="text_primary_light">#212121</color>
-    <color name="text_secondary_light">#666666</color>
-    
-    <color name="background_dark">#121212</color>
-    <color name="text_primary_dark">#FFFFFF</color>
-    <color name="text_secondary_dark">#B0B0B0</color>
-    
-    <color name="button_enabled">#4CAF50</color>
-    <color name="button_disabled">#757575</color>
 </resources>

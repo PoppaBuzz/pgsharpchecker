@@ -7,9 +7,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.work.*
 import java.util.Calendar
-import java.util.concurrent.TimeUnit
 
 class ScheduledChecksActivity : AppCompatActivity() {
     
@@ -121,8 +119,7 @@ class ScheduledChecksActivity : AppCompatActivity() {
     }
     
     private fun scheduleAllChecks() {
-        // Cancel existing scheduled checks
-        WorkManager.getInstance(this).cancelAllWorkByTag("scheduled_check")
+        BackgroundCheckScheduler.cancelAllScheduledChecks(this)
         
         scheduledTimes.forEach { time ->
             scheduleCheckAt(time.first, time.second)
@@ -130,51 +127,6 @@ class ScheduledChecksActivity : AppCompatActivity() {
     }
     
     private fun scheduleCheckAt(hour: Int, minute: Int) {
-        val currentTime = Calendar.getInstance()
-        val scheduledTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-        }
-        
-        // If time has passed today, schedule for tomorrow
-        if (scheduledTime.before(currentTime)) {
-            scheduledTime.add(Calendar.DAY_OF_MONTH, 1)
-        }
-        
-        val delay = scheduledTime.timeInMillis - currentTime.timeInMillis
-        
-        val checkRequest = OneTimeWorkRequestBuilder<VersionCheckWorker>()
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .addTag("scheduled_check")
-            .addTag("scheduled_${hour}_${minute}")
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .build()
-        
-        WorkManager.getInstance(this).enqueue(checkRequest)
-        
-        // Schedule recurring daily check
-        val dailyCheckRequest = PeriodicWorkRequestBuilder<VersionCheckWorker>(
-            24, TimeUnit.HOURS
-        )
-            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .addTag("scheduled_check")
-            .addTag("scheduled_${hour}_${minute}")
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .build()
-        
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "scheduled_check_${hour}_${minute}",
-            ExistingPeriodicWorkPolicy.REPLACE,
-            dailyCheckRequest
-        )
+        BackgroundCheckScheduler.scheduleExactCheck(this, hour, minute)
     }
 }

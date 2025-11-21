@@ -1,10 +1,15 @@
 package com.jphat.pgsharpchecker
 
 import android.Manifest
+import android.app.AlarmManager
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStatus: TextView
     private lateinit var tvLastChecked: TextView
     private lateinit var tvNextCheck: TextView
+    private lateinit var ivStatusIcon: ImageView
     private lateinit var btnCheckNow: Button
     private lateinit var btnEnableAutoCheck: Button
     private lateinit var btnDownloadUpdate: Button
@@ -28,6 +34,10 @@ class MainActivity : AppCompatActivity() {
     
     private var isAutoCheckEnabled = false
     private var updateAvailable = false
+    
+    enum class VersionStatus {
+        UP_TO_DATE, UPDATE_AVAILABLE, ERROR, CHECKING
+    }
     
     companion object {
         private const val NOTIFICATION_PERMISSION_CODE = 100
@@ -48,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
         tvLastChecked = findViewById(R.id.tvLastChecked)
         tvNextCheck = findViewById(R.id.tvNextCheck)
+        ivStatusIcon = findViewById(R.id.ivStatusIcon)
         btnCheckNow = findViewById(R.id.btnCheckNow)
         btnEnableAutoCheck = findViewById(R.id.btnEnableAutoCheck)
         btnDownloadUpdate = findViewById(R.id.btnDownloadUpdate)
@@ -64,6 +75,8 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        
+        requestExactAlarmPermission()
         
         // Load saved auto-check state
         loadAutoCheckState()
@@ -129,9 +142,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun performManualCheck() {
-        tvStatus.text = getString(R.string.checking_updates)
+        updateStatus(VersionStatus.CHECKING)
         
-        // Create one-time work request
         val checkRequest = OneTimeWorkRequestBuilder<VersionCheckWorker>()
             .setConstraints(
                 Constraints.Builder()
@@ -142,7 +154,6 @@ class MainActivity : AppCompatActivity() {
         
         WorkManager.getInstance(this).enqueue(checkRequest)
         
-        // Observe the work status
         WorkManager.getInstance(this).getWorkInfoByIdLiveData(checkRequest.id)
             .observe(this) { workInfo ->
                 if (workInfo != null) {
@@ -152,28 +163,23 @@ class MainActivity : AppCompatActivity() {
                             val installedVersion = workInfo.outputData.getString("installed_version")
                             updateAvailable = workInfo.outputData.getBoolean("update_available", false)
                             
-                            // Update the installed version display with the fresh data from the check
                             tvInstalledVersion.text = getString(R.string.installed_pokemon_go, installedVersion)
                             tvLatestVersion.text = getString(R.string.latest_on_pgsharp, latestVersion)
                             
                             if (updateAvailable) {
+                                updateStatus(VersionStatus.UPDATE_AVAILABLE)
                                 tvStatus.text = getString(R.string.newer_version_available, installedVersion, latestVersion)
-                                btnDownloadUpdate.visibility = android.view.View.VISIBLE
                             } else {
-                                tvStatus.text = getString(R.string.version_matches)
-                                btnDownloadUpdate.visibility = android.view.View.GONE
+                                updateStatus(VersionStatus.UP_TO_DATE)
                             }
                             
-                            // Save and display last check time
-                            saveLastCheckTime()
                             displayLastCheckTime()
-                            displayNextCheckTime()
                         }
                         WorkInfo.State.FAILED -> {
-                            tvStatus.text = getString(R.string.check_failed)
+                            updateStatus(VersionStatus.ERROR)
                         }
                         WorkInfo.State.RUNNING -> {
-                            tvStatus.text = getString(R.string.checking)
+                            updateStatus(VersionStatus.CHECKING)
                         }
                         else -> {}
                     }
@@ -307,23 +313,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun schedulePeriodicVersionCheck() {
-        // Schedule periodic work every 12 hours
-        val periodicWorkRequest = PeriodicWorkRequestBuilder<VersionCheckWorker>(
-            12, TimeUnit.HOURS
-        )
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .setRequiresBatteryNotLow(true)
-                    .build()
-            )
-            .build()
-        
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "pokemon_go_version_check",
-            ExistingPeriodicWorkPolicy.REPLACE,
-            periodicWorkRequest
-        )
+        BackgroundCheckScheduler.schedulePeriodicCheck(this)
         
         saveAutoCheckState(true)
         updateAutoCheckButton()
@@ -339,7 +329,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun disablePeriodicVersionCheck() {
-        WorkManager.getInstance(this).cancelUniqueWork("pokemon_go_version_check")
+        BackgroundCheckScheduler.cancelPeriodicCheck(this)
         
         saveAutoCheckState(false)
         updateAutoCheckButton()
@@ -352,5 +342,50 @@ class MainActivity : AppCompatActivity() {
         ).show()
         
         tvStatus.text = getString(R.string.auto_check_disabled_status)
+    }
+    
+    private fun requestExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            }
+        }
+    }
+    
+    private fun updateStatus(status: VersionStatus) {
+        when (status) {
+            VersionStatus.UP_TO_DATE -> {
+                tvStatus.text = "Your Pokemon Go version matches PGSharp!"
+                tvStatus.setTextColor(getColor(R.color.status_success))
+                ivStatusIcon.setImageResource(android.R.drawable.checkbox_on_background)
+                ivStatusIcon.setColorFilter(getColor(R.color.status_success))
+                btnDownloadUpdate.visibility = android.view.View.GONE
+            }
+            VersionStatus.UPDATE_AVAILABLE -> {
+                tvStatus.text = "Update available! New version found."
+                tvStatus.setTextColor(getColor(R.color.status_warning))
+                ivStatusIcon.setImageResource(android.R.drawable.ic_dialog_info)
+                ivStatusIcon.setColorFilter(getColor(R.color.status_warning))
+                btnDownloadUpdate.visibility = android.view.View.VISIBLE
+            }
+            VersionStatus.ERROR -> {
+                tvStatus.text = "Unable to check for updates. Please try again."
+                tvStatus.setTextColor(getColor(R.color.status_error))
+                ivStatusIcon.setImageResource(android.R.drawable.ic_dialog_alert)
+                ivStatusIcon.setColorFilter(getColor(R.color.status_error))
+                btnDownloadUpdate.visibility = android.view.View.GONE
+            }
+            VersionStatus.CHECKING -> {
+                tvStatus.text = "Checking for updates..."
+                tvStatus.setTextColor(getColor(R.color.status_info))
+                ivStatusIcon.setImageResource(android.R.drawable.ic_popup_sync)
+                ivStatusIcon.setColorFilter(getColor(R.color.status_info))
+                btnDownloadUpdate.visibility = android.view.View.GONE
+            }
+        }
     }
 }
