@@ -20,6 +20,11 @@
 
     <color name="md_theme_outline">#8E8E93</color>
     <color name="md_theme_outlineVariant">#3A3A3A</color>
+    
+    <!-- Material 3 required attributes -->
+    <color name="colorSurfaceContainer">#242424</color>
+    <color name="colorSurfaceContainerLow">#202020</color>
+    <color name="colorOutlineVariant">#3A3A3A</color>
 
     <!-- Status colors -->
     <color name="status_success">#4CAF50</color>

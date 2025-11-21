@@ -44,7 +44,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Installed Version"
-                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="4dp"/>
 
@@ -53,7 +53,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/installed_version"
-                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="20dp"/>
 
@@ -62,7 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Latest on PGSharp"
-                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="4dp"/>
 
@@ -71,7 +71,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/latest_version"
-                    android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="20dp"/>
 
