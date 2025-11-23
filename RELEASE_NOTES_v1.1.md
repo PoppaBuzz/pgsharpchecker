@@ -29,9 +29,6 @@ November 23, 2025
 3. Install the APK
 4. Grant necessary permissions when requested
 
-## Known Issues
-- APK is unsigned (for production use, sign with your keystore)
-
 ## Upgrade Notes
 - All settings and preferences are preserved when upgrading from v1.0
 - No data migration required
