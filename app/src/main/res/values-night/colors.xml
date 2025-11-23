@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 Dark Theme Colors -->
+    <color name="md_theme_primary">#FFD700</color>
+    <color name="md_theme_onPrimary">#000000</color>
+    <color name="md_theme_primaryContainer">#4A4A00</color>
+    <color name="md_theme_onPrimaryContainer">#FFF8DC</color>
+
+    <color name="md_theme_secondary">#9ACBFF</color>
+    <color name="md_theme_onSecondary">#003355</color>
+    <color name="md_theme_secondaryContainer">#004A77</color>
+    <color name="md_theme_onSecondaryContainer">#D0E8FF</color>
+
+    <color name="md_theme_surface">#1A1A1A</color>
+    <color name="md_theme_onSurface">#E6E6E6</color>
+    <color name="md_theme_surfaceVariant">#44474F</color>
+    <color name="md_theme_onSurfaceVariant">#C4C7CF</color>
+    <color name="md_theme_surfaceContainer">#242424</color>
+    <color name="md_theme_surfaceContainerLow">#202020</color>
+
+    <color name="md_theme_outline">#8E9199</color>
+    <color name="md_theme_outlineVariant">#44474F</color>
+
+    <!-- Status colors -->
+    <color name="status_success">#81C784</color>
+    <color name="status_warning">#FFB74D</color>
+    <color name="status_error">#E57373</color>
+    <color name="status_info">#64B5F6</color>
+
+    <color name="button_enabled">#4CAF50</color>
+    <color name="button_disabled">#757575</color>
+</resources>

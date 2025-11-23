@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="?attr/colorSurface">
+    android:background="?attr/colorSurface"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,8 +17,8 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="32dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/logo_description"
             android:maxHeight="100dp"
@@ -43,7 +44,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Installed Version"
+                    android:text="@string/installed_version1"
                     android:textAppearance="?attr/textAppearanceLabelSmall"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="4dp"/>
@@ -55,13 +56,13 @@
                     android:text="@string/installed_version"
                     android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textColor="?attr/colorOnSurface"
-                    android:layout_marginBottom="20dp"/>
+                    android:layout_marginBottom="16dp"/>
 
                 <!-- Latest Version -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Latest on PGSharp"
+                    android:text="@string/latest_on_pgsharp1"
                     android:textAppearance="?attr/textAppearanceLabelSmall"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginBottom="4dp"/>
@@ -73,7 +74,7 @@
                     android:text="@string/latest_version"
                     android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textColor="?attr/colorOnSurface"
-                    android:layout_marginBottom="20dp"/>
+                    android:layout_marginBottom="16dp"/>
 
                 <!-- Divider -->
                 <View
@@ -83,29 +84,17 @@
                     android:layout_marginBottom="16dp"/>
 
                 <!-- Status Message with Icon -->
-                <LinearLayout
+                <TextView
+                    android:id="@+id/tvStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <ImageView
-                        android:id="@+id/ivStatusIcon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:layout_marginEnd="12dp"
-                        android:contentDescription="Status icon"
-                        android:src="@android:drawable/ic_dialog_info"/>
-
-                    <TextView
-                        android:id="@+id/tvStatus"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/status_ready"
-                        android:textAppearance="?attr/textAppearanceBodyLarge"
-                        android:textColor="?attr/colorOnSurface"/>
-                </LinearLayout>
+                    android:text="@string/status_ready"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurface"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
+                    app:drawableStartCompat="@android:drawable/ic_dialog_info"
+                    app:drawableTint="?attr/colorOnSurface" />
 
                 <!-- Last Checked Timestamp -->
                 <TextView
@@ -128,6 +117,20 @@
                     android:visibility="gone"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- Download Pokemon Go Button (Hidden by default) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDownloadPokemonGo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_download_pokemon_go"
+            android:textSize="16sp"
+            android:minHeight="56dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"
+            style="@style/Widget.Material3.Button"
+            app:icon="@android:drawable/stat_sys_download"
+            app:iconGravity="textStart"/>
 
         <!-- Download Update Button (Hidden by default) -->
         <com.google.android.material.button.MaterialButton
@@ -173,49 +176,93 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Settings Header -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Automatic Check Settings"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurface"
-                    android:layout_marginBottom="16dp"/>
-
-                <!-- Enable/Disable Auto Check Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnEnableAutoCheck"
+                <!-- Settings Header (Clickable) -->
+                <LinearLayout
+                    android:id="@+id/llSettingsHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/btn_enable_auto"
-                    android:textSize="15sp"
-                    android:minHeight="52dp"
-                    android:layout_marginBottom="8dp"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    app:cornerRadius="12dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="4dp">
 
-                <!-- Schedule Specific Times Button -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnScheduleChecks"
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/automatic_check_settings"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface"/>
+
+                    <ImageView
+                        android:id="@+id/ivExpandIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/arrow_down_float"
+                        android:contentDescription="@string/expand_collapse"
+                        app:tint="?attr/colorOnSurface"/>
+                </LinearLayout>
+
+                <!-- Expandable Content -->
+                <LinearLayout
+                    android:id="@+id/llExpandableContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/btn_schedule_checks"
-                    android:textSize="15sp"
-                    android:minHeight="52dp"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    app:cornerRadius="12dp"/>
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone">
 
-                <!-- Auto Check Note -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/note_auto_check"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:layout_marginTop="12dp"
-                    android:paddingHorizontal="4dp"/>
+                    <!-- Enable/Disable Auto Check Button -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEnableAutoCheck"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_enable_auto"
+                        android:textSize="15sp"
+                        android:minHeight="52dp"
+                        android:layout_marginBottom="8dp"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        app:cornerRadius="12dp"/>
+
+                    <!-- Schedule Specific Times Button -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnScheduleChecks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_schedule_checks"
+                        android:textSize="15sp"
+                        android:minHeight="52dp"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        app:cornerRadius="12dp"/>
+
+                    <!-- Auto Check Note -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/note_auto_check"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="12dp"
+                        android:paddingHorizontal="4dp"/>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- Change Theme Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnChangeTheme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/change_theme"
+            android:textSize="15sp"
+            android:minHeight="52dp"
+            android:layout_marginBottom="16dp"
+            style="@style/Widget.Material3.Button.TonalButton"
+            app:cornerRadius="12dp"
+            app:icon="@android:drawable/ic_menu_view"
+            app:iconGravity="textStart"/>
 
         <!-- Spacer -->
         <View
@@ -224,35 +271,21 @@
             android:layout_weight="1"/>
 
         <!-- Disclaimer with Info Icon -->
-        <LinearLayout
-            android:id="@+id/disclaimerSection"
+        <TextView
+            android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="start"
+            android:text="@string/disclaimer"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:alpha="0.8"
             android:padding="8dp"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp">
-
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginTop="2dp"
-                android:contentDescription="Info"
-                android:src="@android:drawable/ic_dialog_info"
-                android:alpha="0.6"/>
-
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/disclaimer"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:alpha="0.8"/>
-        </LinearLayout>
+            android:layout_marginBottom="8dp"
+            android:drawablePadding="8dp"
+            android:gravity="start|center_vertical"
+            app:drawableStartCompat="@android:drawable/ic_dialog_info"
+            app:drawableTint="?attr/colorOnSurfaceVariant" />
 
     </LinearLayout>
 </ScrollView>

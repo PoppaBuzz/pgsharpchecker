@@ -8,15 +8,18 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import androidx.work.*
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -26,14 +29,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStatus: TextView
     private lateinit var tvLastChecked: TextView
     private lateinit var tvNextCheck: TextView
-    private lateinit var ivStatusIcon: ImageView
     private lateinit var btnCheckNow: Button
     private lateinit var btnEnableAutoCheck: Button
     private lateinit var btnDownloadUpdate: Button
+    private lateinit var btnDownloadPokemonGo: Button
     private lateinit var btnScheduleChecks: Button
+    private lateinit var btnChangeTheme: Button
+    private lateinit var llSettingsHeader: View
+    private lateinit var llExpandableContent: View
+    private lateinit var ivExpandIcon: android.widget.ImageView
     
     private var isAutoCheckEnabled = false
     private var updateAvailable = false
+    private var isSettingsExpanded = false
     
     enum class VersionStatus {
         UP_TO_DATE, UPDATE_AVAILABLE, ERROR, CHECKING
@@ -46,10 +54,15 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_AUTO_CHECK_ENABLED = "auto_check_enabled"
         private const val KEY_LAST_CHECK_TIME = "last_check_time"
         private const val CHECK_INTERVAL_HOURS = 12L
+        private const val KEY_THEME = "theme_preference"
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        loadAndApplyTheme()
         super.onCreate(savedInstanceState)
+        
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         setContentView(R.layout.activity_main)
         
         // Initialize views
@@ -58,11 +71,15 @@ class MainActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
         tvLastChecked = findViewById(R.id.tvLastChecked)
         tvNextCheck = findViewById(R.id.tvNextCheck)
-        ivStatusIcon = findViewById(R.id.ivStatusIcon)
         btnCheckNow = findViewById(R.id.btnCheckNow)
         btnEnableAutoCheck = findViewById(R.id.btnEnableAutoCheck)
         btnDownloadUpdate = findViewById(R.id.btnDownloadUpdate)
+        btnDownloadPokemonGo = findViewById(R.id.btnDownloadPokemonGo)
         btnScheduleChecks = findViewById(R.id.btnScheduleChecks)
+        btnChangeTheme = findViewById(R.id.btnChangeTheme)
+        llSettingsHeader = findViewById(R.id.llSettingsHeader)
+        llExpandableContent = findViewById(R.id.llExpandableContent)
+        ivExpandIcon = findViewById(R.id.ivExpandIcon)
         
         // Request notification permission for Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -98,6 +115,11 @@ class MainActivity : AppCompatActivity() {
             openPGSharpWebsite()
         }
         
+        // Download Pokemon Go button click
+        btnDownloadPokemonGo.setOnClickListener {
+            openPGSharpWebsite()
+        }
+        
         // Schedule checks button
         btnScheduleChecks.setOnClickListener {
             startActivity(android.content.Intent(this, ScheduledChecksActivity::class.java))
@@ -116,6 +138,15 @@ class MainActivity : AppCompatActivity() {
                 schedulePeriodicVersionCheck()
             }
         }
+
+        btnChangeTheme.setOnClickListener {
+            showThemeChooserDialog()
+        }
+
+        // Settings expand/collapse
+        llSettingsHeader.setOnClickListener {
+            toggleSettingsExpansion()
+        }
     }
     
     private fun displayInstalledVersion() {
@@ -130,6 +161,8 @@ class MainActivity : AppCompatActivity() {
                 val packageInfo = packageManager.getPackageInfo(packageName, 0)
                 val versionName = packageInfo.versionName
                 tvInstalledVersion.text = getString(R.string.installed_pokemon_go, versionName)
+                btnDownloadPokemonGo.visibility = android.view.View.GONE
+                btnCheckNow.isEnabled = true
                 return
             } catch (e: PackageManager.NameNotFoundException) {
                 // Try next package
@@ -138,6 +171,8 @@ class MainActivity : AppCompatActivity() {
         
         // If we get here, no package was found - let's search for it
         tvInstalledVersion.text = getString(R.string.pokemon_go_not_found)
+        btnDownloadPokemonGo.visibility = android.view.View.VISIBLE
+        btnCheckNow.isEnabled = false
         searchForPokemonGoPackage()
     }
     
@@ -249,11 +284,11 @@ class MainActivity : AppCompatActivity() {
         val diff = now - timeMillis
         
         return when {
-            diff < 60000 -> "just now"
-            diff < 3600000 -> "${diff / 60000} minutes ago"
-            diff < 86400000 -> "${diff / 3600000} hours ago"
-            diff < 604800000 -> "${diff / 86400000} days ago"
-            else -> "${diff / 604800000} weeks ago"
+            diff < 60000 -> getString(R.string.just_now)
+            diff < 3600000 -> getString(R.string.minutes_ago, diff / 60000)
+            diff < 86400000 -> getString(R.string.hours_ago, diff / 3600000)
+            diff < 604800000 -> getString(R.string.days_ago, diff / 86400000)
+            else -> getString(R.string.weeks_ago, diff / 604800000)
         }
     }
     
@@ -279,7 +314,7 @@ class MainActivity : AppCompatActivity() {
             tvNextCheck.text = getString(R.string.next_check, timeUntil)
             tvNextCheck.visibility = android.view.View.VISIBLE
         } else {
-            tvNextCheck.text = getString(R.string.next_check, "soon")
+            tvNextCheck.text = getString(R.string.next_check, getString(R.string.soon))
             tvNextCheck.visibility = android.view.View.VISIBLE
         }
     }
@@ -289,16 +324,16 @@ class MainActivity : AppCompatActivity() {
         val diff = timeMillis - now
         
         return when {
-            diff < 60000 -> "in less than a minute"
-            diff < 3600000 -> "in ${diff / 60000} minutes"
-            diff < 86400000 -> "in ${diff / 3600000} hours"
-            else -> "in ${diff / 86400000} days"
+            diff < 60000 -> getString(R.string.in_less_than_a_minute)
+            diff < 3600000 -> getString(R.string.in_minutes, diff / 60000)
+            diff < 86400000 -> getString(R.string.in_hours, diff / 3600000)
+            else -> getString(R.string.in_days, diff / 86400000)
         }
     }
     
     private fun openPGSharpWebsite() {
         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
-        intent.data = "https://www.pgsharp.com".toUri()
+        intent.data = "https://api.pgsharp.com/download".toUri()
         startActivity(intent)
     }
     
@@ -359,33 +394,129 @@ class MainActivity : AppCompatActivity() {
     private fun updateStatus(status: VersionStatus) {
         when (status) {
             VersionStatus.UP_TO_DATE -> {
-                tvStatus.text = "Your Pokemon Go version matches PGSharp!"
+                tvStatus.text = getString(R.string.your_pokemon_go_version_matches_pgsharp)
                 tvStatus.setTextColor(getColor(R.color.status_success))
-                ivStatusIcon.setImageResource(android.R.drawable.checkbox_on_background)
-                ivStatusIcon.setColorFilter(getColor(R.color.status_success))
                 btnDownloadUpdate.visibility = android.view.View.GONE
             }
             VersionStatus.UPDATE_AVAILABLE -> {
-                tvStatus.text = "Update available! New version found."
+                tvStatus.text = getString(R.string.update_available_new_version_found)
                 tvStatus.setTextColor(getColor(R.color.status_warning))
-                ivStatusIcon.setImageResource(android.R.drawable.ic_dialog_info)
-                ivStatusIcon.setColorFilter(getColor(R.color.status_warning))
                 btnDownloadUpdate.visibility = android.view.View.VISIBLE
             }
             VersionStatus.ERROR -> {
-                tvStatus.text = "Unable to check for updates. Please try again."
+                tvStatus.text = getString(R.string.unable_to_check_for_updates_please_try_again)
                 tvStatus.setTextColor(getColor(R.color.status_error))
-                ivStatusIcon.setImageResource(android.R.drawable.ic_dialog_alert)
-                ivStatusIcon.setColorFilter(getColor(R.color.status_error))
                 btnDownloadUpdate.visibility = android.view.View.GONE
             }
             VersionStatus.CHECKING -> {
-                tvStatus.text = "Checking for updates..."
+                tvStatus.text = getString(R.string.checking_for_updates)
                 tvStatus.setTextColor(getColor(R.color.status_info))
-                ivStatusIcon.setImageResource(android.R.drawable.ic_popup_sync)
-                ivStatusIcon.setColorFilter(getColor(R.color.status_info))
                 btnDownloadUpdate.visibility = android.view.View.GONE
             }
         }
+    }
+
+    private fun loadAndApplyTheme() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val selectedTheme = prefs.getInt(KEY_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        AppCompatDelegate.setDefaultNightMode(selectedTheme)
+    }
+
+    private fun showThemeChooserDialog() {
+        val themes = resources.getStringArray(R.array.themes)
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val currentThemeMode = prefs.getInt(KEY_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+
+        val checkedItem = when (currentThemeMode) {
+            AppCompatDelegate.MODE_NIGHT_NO -> 0 // Light
+            AppCompatDelegate.MODE_NIGHT_YES -> 1 // Dark
+            else -> 2 // System Default
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(getString(R.string.theme))
+            .setSingleChoiceItems(themes, checkedItem) { dialog, which ->
+                val selectedTheme = when (which) {
+                    0 -> AppCompatDelegate.MODE_NIGHT_NO
+                    1 -> AppCompatDelegate.MODE_NIGHT_YES
+                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                }
+
+                prefs.edit().putInt(KEY_THEME, selectedTheme).apply()
+                AppCompatDelegate.setDefaultNightMode(selectedTheme)
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun toggleSettingsExpansion() {
+        if (isSettingsExpanded) {
+            // Collapse
+            collapseView(llExpandableContent)
+            rotateIcon(ivExpandIcon, 180f, 0f)
+        } else {
+            // Expand
+            expandView(llExpandableContent)
+            rotateIcon(ivExpandIcon, 0f, 180f)
+        }
+        isSettingsExpanded = !isSettingsExpanded
+    }
+
+    private fun expandView(view: View) {
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec((view.parent as View).width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val targetHeight = view.measuredHeight
+
+        view.layoutParams.height = 0
+        view.visibility = View.VISIBLE
+
+        val a = object : android.view.animation.Animation() {
+            override fun applyTransformation(interpolatedTime: Float, t: android.view.animation.Transformation?) {
+                view.layoutParams.height = if (interpolatedTime == 1f) {
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                } else {
+                    (targetHeight * interpolatedTime).toInt()
+                }
+                view.requestLayout()
+            }
+
+            override fun willChangeBounds(): Boolean = true
+        }
+
+        a.duration = 300
+        view.startAnimation(a)
+    }
+
+    private fun collapseView(view: View) {
+        val initialHeight = view.measuredHeight
+
+        val a = object : android.view.animation.Animation() {
+            override fun applyTransformation(interpolatedTime: Float, t: android.view.animation.Transformation?) {
+                if (interpolatedTime == 1f) {
+                    view.visibility = View.GONE
+                } else {
+                    view.layoutParams.height = initialHeight - (initialHeight * interpolatedTime).toInt()
+                    view.requestLayout()
+                }
+            }
+
+            override fun willChangeBounds(): Boolean = true
+        }
+
+        a.duration = 300
+        view.startAnimation(a)
+    }
+
+    private fun rotateIcon(view: android.widget.ImageView, fromDegrees: Float, toDegrees: Float) {
+        val rotate = android.view.animation.RotateAnimation(
+            fromDegrees, toDegrees,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+        )
+        rotate.duration = 300
+        rotate.fillAfter = true
+        view.startAnimation(rotate)
     }
 }

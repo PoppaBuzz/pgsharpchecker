@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base application theme using Material 3 -->
-    <style name="Base.Theme.PGSharpChecker" parent="Theme.Material3.DayNight">
+    <style name="Base.Theme.PGSharpChecker" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color -->
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
@@ -22,7 +22,7 @@
 
         <!-- Transparent status bar -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="Theme.PGSharpChecker" parent="Base.Theme.PGSharpChecker" />

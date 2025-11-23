@@ -36,6 +36,7 @@
     <string name="next_check_disabled">Auto-check disabled</string>
     <string name="next_check">Next check: %1$s</string>
     <string name="btn_download_update">Download Update from PGSharp</string>
+    <string name="btn_download_pokemon_go">Download Pokemon Go from PGSharp</string>
     
     <!-- Toast Messages -->
     <string name="pokemon_go_not_found_toast">Pokemon Go app not found on device</string>
@@ -44,4 +45,36 @@
     <string name="auto_check_disabled_toast">Automatic checking disabled</string>
     <string name="no_pokemon_go_found">No Pokemon Go related apps found</string>
     <string name="found_packages_text">Found these packages:\n%1$s</string>
+    <string name="installed_version1">Installed Version</string>
+    <string name="latest_on_pgsharp1">Latest on PGSharp</string>
+    <string name="status_icon">Status icon</string>
+    <string name="automatic_check_settings">Automatic Check Settings</string>
+    <string name="expand_collapse">Expand or collapse settings</string>
+    <string name="info">Info</string>
+
+    <!-- Theme settings -->
+    <string name="change_theme">Change Theme</string>
+    <string name="theme">Theme</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="system_default">System Default</string>
+    <string-array name="themes">
+        <item>@string/light</item>
+        <item>@string/dark</item>
+        <item>@string/system_default</item>
+    </string-array>
+    <string name="just_now">just now</string>
+    <string name="minutes_ago">%d minutes ago</string>
+    <string name="hours_ago">%d hours ago</string>
+    <string name="days_ago">%d days ago</string>
+    <string name="weeks_ago">%d weeks ago</string>
+    <string name="in_less_than_a_minute">in less than a minute</string>
+    <string name="in_minutes">in %d minutes</string>
+    <string name="in_hours">in %d hours</string>
+    <string name="in_days">in %d days</string>
+    <string name="soon">soon</string>
+    <string name="update_available_new_version_found">Update available! New version found.</string>
+    <string name="unable_to_check_for_updates_please_try_again">Unable to check for updates. Please try again.</string>
+    <string name="checking_for_updates">Checking for updates...</string>
+    <string name="your_pokemon_go_version_matches_pgsharp">Your Pokemon Go version matches PGSharp!</string>
 </resources>
