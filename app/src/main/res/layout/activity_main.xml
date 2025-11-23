@@ -83,19 +83,6 @@
                     android:background="?attr/colorOutlineVariant"
                     android:layout_marginBottom="16dp"/>
 
-                <!-- Status Message with Icon -->
-                <TextView
-                    android:id="@+id/tvStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/status_ready"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    android:drawablePadding="12dp"
-                    android:gravity="center_vertical"
-                    app:drawableStartCompat="@android:drawable/ic_dialog_info"
-                    app:drawableTint="?attr/colorOnSurface" />
-
                 <!-- Last Checked Timestamp -->
                 <TextView
                     android:id="@+id/tvLastChecked"
@@ -103,8 +90,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/never_checked"
                     android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:layout_marginTop="12dp"/>
+                    android:textColor="?attr/colorOnSurfaceVariant"/>
 
                 <TextView
                     android:id="@+id/tvNextCheck"
@@ -115,6 +101,20 @@
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginTop="4dp"
                     android:visibility="gone"/>
+
+                <!-- Status Message with Icon -->
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/status_ready"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurface"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="12dp"
+                    app:drawableStartCompat="@android:drawable/ic_dialog_info"
+                    app:drawableTint="?attr/colorOnSurface" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -200,7 +200,7 @@
                         android:id="@+id/ivExpandIcon"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@android:drawable/arrow_down_float"
+                        android:src="@drawable/ic_expand_more"
                         android:contentDescription="@string/expand_collapse"
                         app:tint="?attr/colorOnSurface"/>
                 </LinearLayout>
