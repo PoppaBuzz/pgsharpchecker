@@ -9,7 +9,7 @@ import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
-import org.jsoup.HttpStatusException
+import org.jsoup.nodes.Document
 
 class VersionCheckWorker(
     context: Context,
@@ -19,10 +19,14 @@ class VersionCheckWorker(
     companion object {
         private const val TAG = "VersionCheckWorker"
         private val POKEMON_GO_PACKAGES = listOf(
-            "com.nianticlabs.pokemongo"  // Official Pokemon Go / PGSharp uses same package
+            "com.nianticlabs.pokemongo",   // Official Pokemon Go
+            "com.pgsharp.pokemongo",        // PGSharp
+            "com.nianticproject.holoholo"   // Legacy Pokemon Go
         )
-        private const val PGSHARP_URL = "https://pgsharp.com"
+        private const val PGSHARP_URL = "https://www.pgsharp.com"
     }
+    
+    private val webViewScraper = WebViewScraper(context)
     
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
@@ -66,6 +70,13 @@ class VersionCheckWorker(
                 )
             }
             
+            // Save version info to SharedPreferences for persistence across app restarts
+            val prefs = applicationContext.getSharedPreferences("PGSharpCheckerPrefs", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putString("installed_version", installedVersion)
+                .putString("latest_version", latestVersion)
+                .apply()
+            
             // Return result with version information
             val outputData = workDataOf(
                 "installed_version" to installedVersion,
@@ -101,16 +112,21 @@ class VersionCheckWorker(
     }
     
     /**
-     * Scrape the latest version from pgsharp.com using Jsoup
+     * Fetches a page using WebView (bypasses Cloudflare protection)
+     * and returns a Jsoup Document for parsing.
+     */
+    private suspend fun fetchPage(url: String): Document {
+        val html = webViewScraper.fetchPageContent(url)
+        return Jsoup.parse(html, url)
+    }
+
+    /**
+     * Scrape the latest version from pgsharp.com using WebView and Jsoup
      */
     private suspend fun getLatestVersionFromWebsite(): String? = withContext(Dispatchers.IO) {
         try {
-            // Connect to the website and parse HTML
-            val document = Jsoup.connect(PGSHARP_URL)
-                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                .timeout(15000)
-                .followRedirects(true)
-                .get()
+            // Connect to the website and parse HTML using WebView
+            val document = fetchPage(PGSHARP_URL)
             
             Log.d(TAG, "Successfully fetched pgsharp.com")
             
@@ -147,9 +163,6 @@ class VersionCheckWorker(
             Log.e(TAG, "Could not find version. Page sample: ${pageText.take(500)}")
             null
             
-        } catch (e: HttpStatusException) {
-            Log.e(TAG, "HTTP error: ${e.statusCode}", e)
-            null
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching website: ${e.message}", e)
             null
@@ -161,10 +174,7 @@ class VersionCheckWorker(
      */
     private suspend fun getVersionFromAlternativeSource(): String? = withContext(Dispatchers.IO) {
         try {
-            val document = Jsoup.connect("$PGSHARP_URL/download")
-                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .timeout(15000)
-                .get()
+            val document = fetchPage("$PGSHARP_URL/download")
             
             val pageText = document.text()
             // Look for Pokemon Go version in parentheses like (0.385.2-G)

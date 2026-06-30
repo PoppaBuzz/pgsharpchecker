@@ -68,11 +68,12 @@ The app requires the following permissions:
 
 - **Language**: Kotlin
 - **Minimum SDK**: 24 (Android 7.0)
-- **Target SDK**: 34 (Android 14)
+- **Target SDK**: 37 (Android 14)
 - **Architecture**: MVVM with WorkManager for background tasks
 - **Libraries**:
   - AndroidX WorkManager - Background task scheduling
   - Jsoup - HTML parsing for web scraping
+  - Android WebView - Bot protection bypass for web scraping
   - Kotlin Coroutines - Asynchronous operations
 
 ## Contributing

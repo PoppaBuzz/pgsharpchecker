@@ -55,6 +55,8 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_LAST_CHECK_TIME = "last_check_time"
         private const val CHECK_INTERVAL_HOURS = 12L
         private const val KEY_THEME = "theme_preference"
+        private const val KEY_LATEST_VERSION = "latest_version"
+        private const val KEY_INSTALLED_VERSION = "installed_version"
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,6 +108,9 @@ class MainActivity : AppCompatActivity() {
         
         // Display last check time
         displayLastCheckTime()
+        
+        // Restore saved version info from previous checks
+        displaySavedVersionInfo()
         
         // Display next check time
         displayNextCheckTime()
@@ -198,6 +203,13 @@ class MainActivity : AppCompatActivity() {
                             val installedVersion = workInfo.outputData.getString("installed_version")
                             updateAvailable = workInfo.outputData.getBoolean("update_available", false)
                             
+                            // Persist version data so it survives app restarts
+                            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                                .putString(KEY_LATEST_VERSION, latestVersion)
+                                .putString(KEY_INSTALLED_VERSION, installedVersion)
+                                .apply()
+                            saveLastCheckTime()
+                            
                             tvInstalledVersion.text = getString(R.string.installed_pokemon_go, installedVersion)
                             tvLatestVersion.text = getString(R.string.latest_on_pgsharp, latestVersion)
                             
@@ -279,6 +291,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    private fun displaySavedVersionInfo() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val latestVersion = prefs.getString(KEY_LATEST_VERSION, null)
+        val installedVersion = prefs.getString(KEY_INSTALLED_VERSION, null)
+        
+        if (latestVersion != null && installedVersion != null) {
+            tvLatestVersion.text = getString(R.string.latest_on_pgsharp, latestVersion)
+            tvInstalledVersion.text = getString(R.string.installed_pokemon_go, installedVersion)
+        }
+    }
+
     private fun getTimeAgo(timeMillis: Long): String {
         val now = System.currentTimeMillis()
         val diff = now - timeMillis
