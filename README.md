@@ -14,7 +14,7 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 
   ![Notification Permission](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/notifications-tn.png)
   ![Automatic Checking On](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/autoon-tn.png)
-  ![Automatic Checking Off](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/autoOff-tn.png)
+  ![Automatic Checking Off](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/autooff-tn.png)
   ![Scheduled Time Checks](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/scheduled-tn.png)
   ![Checking for Updates](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/checking-tn.png)
   ![Version Matches](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/matches-tn.png)
