@@ -12,7 +12,7 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 
 ## Screenshots
 
-  ![Notification Permission](screenshots/notifications_tn.png)
+  ![Notification Permission](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/notifications-tn.png)
 
 ## How It Works
 
