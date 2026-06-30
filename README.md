@@ -12,9 +12,7 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 
 ## Screenshots
 
-<p align="center">
   ![Notification Permission](screenshots/notifications_tn.png)
-</p>
 
 ## How It Works
 
