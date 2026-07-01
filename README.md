@@ -12,12 +12,13 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 
 ## Screenshots
 
-<p align="center">
-  <img src="screenshots/permissions.jpg" width="250" alt="Permissions"/>
-  <img src="screenshots/checking.jpg" width="250" alt="Checking Version"/>
-  <img src="screenshots/autooff.jpg" width="250" alt="Auto Off"/>
-  <img src="screenshots/autoon.jpg" width="250" alt="Auto On"/>
-</p>
+  ![Notification Permission](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/notifications-tn.png)
+  ![Automatic Checking On](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/autoon-tn.png)
+  ![Automatic Checking Off](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/autooff-tn.png)
+  ![Scheduled Time Checks](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/scheduled-tn.png)
+  ![Checking for Updates](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/checking-tn.png)
+  ![Version Matches](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/matches-tn.png)
+  ![Light Theme](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/light-tn.png)
 
 ## How It Works
 
@@ -30,7 +31,7 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 
 ### Requirements
 - Android 7.0 (API 24) or higher
-- Pokemon Go installed on your device
+- PGSharp installed on your device
 
 ### Install from APK
 1. Download the latest APK from the [Releases](../../releases) page
