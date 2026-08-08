@@ -20,6 +20,8 @@ An Android app that monitors your installed Pokémon GO version and compares it 
   ![Checking for Updates](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/checking-tn.png)
   ![Version Matches](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/matches-tn.png)
   ![Light Theme](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/light-tn.png)
+  ![Update Available](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/updateavailable_tn.png)
+  ![Update Notification](https://raw.githubusercontent.com/PoppaBuzz/pgsharpchecker/refs/heads/main/screenshots/updatenotification_tn.png)
 
 ## How It Works
 
