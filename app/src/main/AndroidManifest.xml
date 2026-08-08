@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.jphat.pgsharpchecker">
+    >
 
     <!-- Required permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- Declare specific package we want to query (less invasive than QUERY_ALL_PACKAGES) -->
+    <!-- Declare the specific packages we want to query (less invasive than QUERY_ALL_PACKAGES) -->
     <queries>
         <package android:name="com.nianticlabs.pokemongo" />
+        <package android:name="com.pgsharp.pokemongo" />
+        <package android:name="com.nianticproject.holoholo" />
     </queries>
     
     <application

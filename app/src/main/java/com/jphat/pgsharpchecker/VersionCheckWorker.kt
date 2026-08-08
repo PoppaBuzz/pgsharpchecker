@@ -3,6 +3,7 @@ package com.jphat.pgsharpchecker
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import androidx.core.content.edit
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -19,11 +20,40 @@ class VersionCheckWorker(
     companion object {
         private const val TAG = "VersionCheckWorker"
         private val POKEMON_GO_PACKAGES = listOf(
-            "com.nianticlabs.pokemongo",   // Official Pokemon Go
+            "com.nianticlabs.pokemongo",   // Official Pokémon GO
             "com.pgsharp.pokemongo",        // PGSharp
-            "com.nianticproject.holoholo"   // Legacy Pokemon Go
+            "com.nianticproject.holoholo"   // Legacy Pokémon GO
         )
         private const val PGSHARP_URL = "https://www.pgsharp.com"
+
+        /**
+         * Compare two dot-separated version strings (e.g. "0.385.2").
+         * Returns true if [latest] is greater than [installed].
+         */
+        fun isUpdateAvailable(installed: String, latest: String): Boolean {
+            try {
+                val installedParts = installed.split(".").map { it.takeWhile(Char::isDigit).toIntOrNull() ?: 0 }
+                val latestParts = latest.split(".").map { it.takeWhile(Char::isDigit).toIntOrNull() ?: 0 }
+
+                // Compare major, minor, patch versions
+                for (i in 0 until maxOf(installedParts.size, latestParts.size)) {
+                    val installedPart = installedParts.getOrNull(i) ?: 0
+                    val latestPart = latestParts.getOrNull(i) ?: 0
+
+                    if (latestPart > installedPart) {
+                        return true
+                    } else if (latestPart < installedPart) {
+                        return false
+                    }
+                }
+
+                return false // Versions are equal
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error comparing versions", e)
+                return false
+            }
+        }
     }
     
     private val webViewScraper = WebViewScraper(context)
@@ -34,9 +64,9 @@ class VersionCheckWorker(
             val installedVersion = getInstalledVersion()
             
             if (installedVersion == null) {
-                Log.e(TAG, "Pokemon Go not installed")
+                Log.e(TAG, "Pokémon GO not installed")
                 return@withContext Result.failure(
-                    workDataOf("error" to "Pokemon Go app not found")
+                    workDataOf("error" to "Pokémon GO app not found")
                 )
             }
             
@@ -72,10 +102,11 @@ class VersionCheckWorker(
             
             // Save version info to SharedPreferences for persistence across app restarts
             val prefs = applicationContext.getSharedPreferences("PGSharpCheckerPrefs", Context.MODE_PRIVATE)
-            prefs.edit()
-                .putString("installed_version", installedVersion)
-                .putString("latest_version", latestVersion)
-                .apply()
+            prefs.edit {
+                putString("installed_version", installedVersion)
+                putString("latest_version", latestVersion)
+                putBoolean("update_available", updateAvailable)
+            }
             
             // Return result with version information
             val outputData = workDataOf(
@@ -93,7 +124,7 @@ class VersionCheckWorker(
     }
     
     /**
-     * Get the installed version of Pokemon Go from PackageManager
+     * Get the installed version of Pokémon GO from PackageManager
      * Tries multiple package names to find the installed app
      */
     private fun getInstalledVersion(): String? {
@@ -101,13 +132,13 @@ class VersionCheckWorker(
             try {
                 val packageInfo = applicationContext.packageManager.getPackageInfo(packageName, 0)
                 val version = packageInfo.versionName
-                Log.d(TAG, "Found Pokemon Go package: $packageName with version: $version")
+                Log.d(TAG, "Found Pokémon GO package: $packageName with version: $version")
                 return version
             } catch (e: PackageManager.NameNotFoundException) {
                 Log.d(TAG, "Package $packageName not found, trying next...")
             }
         }
-        Log.e(TAG, "No Pokemon Go package found on device")
+        Log.e(TAG, "No Pokémon GO package found on device")
         return null
     }
     
@@ -134,13 +165,13 @@ class VersionCheckWorker(
             val pageText = document.text()
             Log.d(TAG, "Page text length: ${pageText.length}")
             
-            // Try multiple patterns to find Pokemon Go version (not PGSharp version)
+            // Try multiple patterns to find Pokémon GO version (not PGSharp version)
             // Looking for patterns like "0.385.2" or "(0.385.2-G)" in the page
             val patterns = listOf(
                 """\((\d+\.\d+\.\d+)[-\w]*\)""".toRegex(),  // Matches "(0.385.2-G)" or "(0.385.2)"
                 """Pokemon\s*Go[:\s]+(\d+\.\d+\.\d+)""".toRegex(RegexOption.IGNORE_CASE),
                 """PoGo[:\s]+(\d+\.\d+\.\d+)""".toRegex(RegexOption.IGNORE_CASE),
-                """0\.(\d+\.\d+)""".toRegex()  // Matches Pokemon Go version pattern starting with 0.
+                """0\.(\d+\.\d+)""".toRegex()  // Matches Pokémon GO version pattern starting with 0.
             )
             
             for (pattern in patterns) {
@@ -151,9 +182,9 @@ class VersionCheckWorker(
                     if (pattern.pattern.startsWith("0\\.")) {
                         version = "0.$version"
                     }
-                    // Only accept versions that look like Pokemon Go (start with 0.)
+                    // Only accept versions that look like Pokémon GO (start with 0.)
                     if (version.startsWith("0.")) {
-                        Log.d(TAG, "Found Pokemon Go version: $version")
+                        Log.d(TAG, "Found Pokémon GO version: $version")
                         return@withContext version
                     }
                 }
@@ -177,13 +208,13 @@ class VersionCheckWorker(
             val document = fetchPage("$PGSHARP_URL/download")
             
             val pageText = document.text()
-            // Look for Pokemon Go version in parentheses like (0.385.2-G)
+            // Look for Pokémon GO version in parentheses like (0.385.2-G)
             val pattern = """\((\d+\.\d+\.\d+)[-\w]*\)""".toRegex()
             val matchResult = pattern.find(pageText)
             
             matchResult?.groupValues?.get(1)?.also {
                 if (it.startsWith("0.")) {
-                    Log.d(TAG, "Found Pokemon Go version from alternative source: $it")
+                    Log.d(TAG, "Found Pokémon GO version from alternative source: $it")
                     return@withContext it
                 }
             }
@@ -203,32 +234,4 @@ class VersionCheckWorker(
         }
     }
     
-    /**
-     * Compare two version strings to determine if update is available
-     * Returns true if latestVersion is greater than installedVersion
-     */
-    private fun isUpdateAvailable(installed: String, latest: String): Boolean {
-        try {
-            val installedParts = installed.split(".").map { it.toIntOrNull() ?: 0 }
-            val latestParts = latest.split(".").map { it.toIntOrNull() ?: 0 }
-            
-            // Compare major, minor, patch versions
-            for (i in 0 until maxOf(installedParts.size, latestParts.size)) {
-                val installedPart = installedParts.getOrNull(i) ?: 0
-                val latestPart = latestParts.getOrNull(i) ?: 0
-                
-                if (latestPart > installedPart) {
-                    return true
-                } else if (latestPart < installedPart) {
-                    return false
-                }
-            }
-            
-            return false // Versions are equal
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Error comparing versions", e)
-            return false
-        }
-    }
 }

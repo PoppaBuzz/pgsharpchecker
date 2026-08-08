@@ -13,7 +13,7 @@ import androidx.core.app.NotificationManagerCompat
 object NotificationHelper {
     
     private const val CHANNEL_ID = "version_check_channel"
-    private const val CHANNEL_NAME = "Pokemon Go Version Checker"
+    private const val CHANNEL_NAME = "Pokémon GO Version Checker"
     private const val NOTIFICATION_ID = 1001
     
     /**
@@ -23,7 +23,7 @@ object NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = "Notifications when your Pokemon Go version differs from PGSharp's supported version"
+                description = "Notifications when your Pokémon GO version differs from PGSharp's supported version"
             }
             
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) 
@@ -39,7 +39,7 @@ object NotificationHelper {
         createNotificationChannel(context)
         
         // Intent to open PGSharp website for download
-        val websiteIntent = Intent(Intent.ACTION_VIEW, "https://www.pgsharp.com".toUri())
+        val websiteIntent = Intent(Intent.ACTION_VIEW, "https://api.pgsharp.com/download".toUri())
         val pendingIntent = PendingIntent.getActivity(
             context,
             0,
@@ -50,11 +50,11 @@ object NotificationHelper {
         // Build notification
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Pokemon Go Version Mismatch")
+            .setContentTitle("Pokémon GO Version Mismatch")
             .setContentText("PGSharp supports v$latestVersion (You have: $installedVersion)")
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText("PGSharp supports a different Pokemon Go version!\n\nYour Pokemon Go: $installedVersion\nPGSharp supports: $latestVersion\n\nTap to visit pgsharp.com for details")
+                    .bigText("PGSharp supports a different Pokémon GO version!\n\nYour Pokémon GO: $installedVersion\nPGSharp supports: $latestVersion\n\nTap to download the update from PGSharp")
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
@@ -65,29 +65,6 @@ object NotificationHelper {
         try {
             with(NotificationManagerCompat.from(context)) {
                 notify(NOTIFICATION_ID, notification)
-            }
-        } catch (e: SecurityException) {
-            // Permission not granted, silently fail
-        }
-    }
-    
-    /**
-     * Send a test notification
-     */
-    fun sendTestNotification(context: Context) {
-        createNotificationChannel(context)
-        
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Version Checker Active")
-            .setContentText("Automatic version checking is working properly")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .build()
-        
-        try {
-            with(NotificationManagerCompat.from(context)) {
-                notify(NOTIFICATION_ID + 1, notification)
             }
         } catch (e: SecurityException) {
             // Permission not granted, silently fail

@@ -1,10 +1,10 @@
 package com.jphat.pgsharpchecker
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -16,11 +16,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.work.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     
@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     
     private var isAutoCheckEnabled = false
     private var updateAvailable = false
+    private var currentInstalledVersion: String? = null
     private var isSettingsExpanded = false
     
     enum class VersionStatus {
@@ -49,7 +50,6 @@ class MainActivity : AppCompatActivity() {
     
     companion object {
         private const val NOTIFICATION_PERMISSION_CODE = 100
-        private const val QUERY_PACKAGES_PERMISSION_CODE = 101
         private const val PREFS_NAME = "PGSharpCheckerPrefs"
         private const val KEY_AUTO_CHECK_ENABLED = "auto_check_enabled"
         private const val KEY_LAST_CHECK_TIME = "last_check_time"
@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_THEME = "theme_preference"
         private const val KEY_LATEST_VERSION = "latest_version"
         private const val KEY_INSTALLED_VERSION = "installed_version"
+        private const val KEY_UPDATE_AVAILABLE = "update_available"
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -120,14 +121,14 @@ class MainActivity : AppCompatActivity() {
             openPGSharpWebsite()
         }
         
-        // Download Pokemon Go button click
+        // Download Pokémon GO button click
         btnDownloadPokemonGo.setOnClickListener {
             openPGSharpWebsite()
         }
         
         // Schedule checks button
         btnScheduleChecks.setOnClickListener {
-            startActivity(android.content.Intent(this, ScheduledChecksActivity::class.java))
+            startActivity(Intent(this, ScheduledChecksActivity::class.java))
         }
         
         // Manual check button
@@ -165,8 +166,9 @@ class MainActivity : AppCompatActivity() {
             try {
                 val packageInfo = packageManager.getPackageInfo(packageName, 0)
                 val versionName = packageInfo.versionName
+                currentInstalledVersion = versionName
                 tvInstalledVersion.text = getString(R.string.installed_pokemon_go, versionName)
-                btnDownloadPokemonGo.visibility = android.view.View.GONE
+                btnDownloadPokemonGo.visibility = View.GONE
                 btnCheckNow.isEnabled = true
                 return
             } catch (e: PackageManager.NameNotFoundException) {
@@ -175,8 +177,9 @@ class MainActivity : AppCompatActivity() {
         }
         
         // If we get here, no package was found - let's search for it
+        currentInstalledVersion = null
         tvInstalledVersion.text = getString(R.string.pokemon_go_not_found)
-        btnDownloadPokemonGo.visibility = android.view.View.VISIBLE
+        btnDownloadPokemonGo.visibility = View.VISIBLE
         btnCheckNow.isEnabled = false
         searchForPokemonGoPackage()
     }
@@ -204,10 +207,11 @@ class MainActivity : AppCompatActivity() {
                             updateAvailable = workInfo.outputData.getBoolean("update_available", false)
                             
                             // Persist version data so it survives app restarts
-                            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-                                .putString(KEY_LATEST_VERSION, latestVersion)
-                                .putString(KEY_INSTALLED_VERSION, installedVersion)
-                                .apply()
+                            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
+                                putString(KEY_LATEST_VERSION, latestVersion)
+                                putString(KEY_INSTALLED_VERSION, installedVersion)
+                                putBoolean(KEY_UPDATE_AVAILABLE, updateAvailable)
+                            }
                             saveLastCheckTime()
                             
                             tvInstalledVersion.text = getString(R.string.installed_pokemon_go, installedVersion)
@@ -234,6 +238,10 @@ class MainActivity : AppCompatActivity() {
             }
     }
     
+    // Best-effort fallback when none of the packages declared in <queries> are found.
+    // On Android 11+ getInstalledApplications only returns visible packages, which is
+    // acceptable here: we deliberately avoid QUERY_ALL_PACKAGES for privacy reasons.
+    @SuppressLint("QueryPermissionsNeeded")
     private fun searchForPokemonGoPackage() {
         // Search all installed packages for anything containing "pokemon" or "niantic"
         val pm = packageManager
@@ -253,8 +261,8 @@ class MainActivity : AppCompatActivity() {
             }
             tvInstalledVersion.text = getString(R.string.found_packages_text, packageNames)
             Toast.makeText(
-                this, 
-                getString(R.string.found_packages, foundPackages.size), 
+                this,
+                resources.getQuantityString(R.plurals.found_packages, foundPackages.size, foundPackages.size),
                 Toast.LENGTH_LONG
             ).show()
         } else {
@@ -270,13 +278,13 @@ class MainActivity : AppCompatActivity() {
     
     private fun saveAutoCheckState(enabled: Boolean) {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        prefs.edit().putBoolean(KEY_AUTO_CHECK_ENABLED, enabled).apply()
+        prefs.edit { putBoolean(KEY_AUTO_CHECK_ENABLED, enabled) }
         isAutoCheckEnabled = enabled
     }
     
     private fun saveLastCheckTime() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        prefs.edit().putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis()).apply()
+        prefs.edit { putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis()) }
     }
     
     private fun displayLastCheckTime() {
@@ -299,6 +307,22 @@ class MainActivity : AppCompatActivity() {
         if (latestVersion != null && installedVersion != null) {
             tvLatestVersion.text = getString(R.string.latest_on_pgsharp, latestVersion)
             tvInstalledVersion.text = getString(R.string.installed_pokemon_go, installedVersion)
+
+            // Re-derive the update state from the freshly read installed version so a
+            // stale flag can't leave the app stuck on the Download button after the
+            // user has already updated. Falls back to the stored flag if Pokémon GO
+            // isn't currently detected.
+            val currentVersion = currentInstalledVersion
+            val updateAvailableNow = if (currentVersion != null) {
+                VersionCheckWorker.isUpdateAvailable(currentVersion, latestVersion)
+            } else {
+                prefs.getBoolean(KEY_UPDATE_AVAILABLE, false)
+            }
+            if (updateAvailableNow) {
+                updateStatus(VersionStatus.UPDATE_AVAILABLE)
+            } else {
+                updateStatus(VersionStatus.UP_TO_DATE)
+            }
         }
     }
 
@@ -308,16 +332,19 @@ class MainActivity : AppCompatActivity() {
         
         return when {
             diff < 60000 -> getString(R.string.just_now)
-            diff < 3600000 -> getString(R.string.minutes_ago, diff / 60000)
-            diff < 86400000 -> getString(R.string.hours_ago, diff / 3600000)
-            diff < 604800000 -> getString(R.string.days_ago, diff / 86400000)
-            else -> getString(R.string.weeks_ago, diff / 604800000)
+            diff < 3600000 -> quantityString(R.plurals.minutes_ago, diff / 60000)
+            diff < 86400000 -> quantityString(R.plurals.hours_ago, diff / 3600000)
+            diff < 604800000 -> quantityString(R.plurals.days_ago, diff / 86400000)
+            else -> quantityString(R.plurals.weeks_ago, diff / 604800000)
         }
     }
     
+    private fun quantityString(pluralRes: Int, count: Long): String =
+        resources.getQuantityString(pluralRes, count.toInt(), count)
+    
     private fun displayNextCheckTime() {
         if (!isAutoCheckEnabled) {
-            tvNextCheck.visibility = android.view.View.GONE
+            tvNextCheck.visibility = View.GONE
             return
         }
         
@@ -325,7 +352,7 @@ class MainActivity : AppCompatActivity() {
         val lastCheckTime = prefs.getLong(KEY_LAST_CHECK_TIME, 0)
         
         if (lastCheckTime == 0L) {
-            tvNextCheck.visibility = android.view.View.GONE
+            tvNextCheck.visibility = View.GONE
             return
         }
         
@@ -335,10 +362,10 @@ class MainActivity : AppCompatActivity() {
         if (nextCheckTime > now) {
             val timeUntil = getTimeUntil(nextCheckTime)
             tvNextCheck.text = getString(R.string.next_check, timeUntil)
-            tvNextCheck.visibility = android.view.View.VISIBLE
+            tvNextCheck.visibility = View.VISIBLE
         } else {
             tvNextCheck.text = getString(R.string.next_check, getString(R.string.soon))
-            tvNextCheck.visibility = android.view.View.VISIBLE
+            tvNextCheck.visibility = View.VISIBLE
         }
     }
     
@@ -348,14 +375,14 @@ class MainActivity : AppCompatActivity() {
         
         return when {
             diff < 60000 -> getString(R.string.in_less_than_a_minute)
-            diff < 3600000 -> getString(R.string.in_minutes, diff / 60000)
-            diff < 86400000 -> getString(R.string.in_hours, diff / 3600000)
-            else -> getString(R.string.in_days, diff / 86400000)
+            diff < 3600000 -> quantityString(R.plurals.in_minutes, diff / 60000)
+            diff < 86400000 -> quantityString(R.plurals.in_hours, diff / 3600000)
+            else -> quantityString(R.plurals.in_days, diff / 86400000)
         }
     }
     
     private fun openPGSharpWebsite() {
-        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+        val intent = Intent(Intent.ACTION_VIEW)
         intent.data = "https://api.pgsharp.com/download".toUri()
         startActivity(intent)
     }
@@ -407,7 +434,7 @@ class MainActivity : AppCompatActivity() {
             val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
             if (!alarmManager.canScheduleExactAlarms()) {
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                    data = Uri.parse("package:$packageName")
+                    data = "package:$packageName".toUri()
                 }
                 startActivity(intent)
             }
@@ -419,22 +446,26 @@ class MainActivity : AppCompatActivity() {
             VersionStatus.UP_TO_DATE -> {
                 tvStatus.text = getString(R.string.your_pokemon_go_version_matches_pgsharp)
                 tvStatus.setTextColor(getColor(R.color.status_success))
-                btnDownloadUpdate.visibility = android.view.View.GONE
+                btnDownloadUpdate.visibility = View.GONE
+                btnCheckNow.visibility = View.VISIBLE
             }
             VersionStatus.UPDATE_AVAILABLE -> {
                 tvStatus.text = getString(R.string.update_available_new_version_found)
                 tvStatus.setTextColor(getColor(R.color.status_warning))
-                btnDownloadUpdate.visibility = android.view.View.VISIBLE
+                btnDownloadUpdate.visibility = View.VISIBLE
+                btnCheckNow.visibility = View.GONE
             }
             VersionStatus.ERROR -> {
                 tvStatus.text = getString(R.string.unable_to_check_for_updates_please_try_again)
                 tvStatus.setTextColor(getColor(R.color.status_error))
-                btnDownloadUpdate.visibility = android.view.View.GONE
+                btnDownloadUpdate.visibility = View.GONE
+                btnCheckNow.visibility = View.VISIBLE
             }
             VersionStatus.CHECKING -> {
                 tvStatus.text = getString(R.string.checking_for_updates)
                 tvStatus.setTextColor(getColor(R.color.status_info))
-                btnDownloadUpdate.visibility = android.view.View.GONE
+                btnDownloadUpdate.visibility = View.GONE
+                btnCheckNow.visibility = View.VISIBLE
             }
         }
     }
@@ -465,7 +496,7 @@ class MainActivity : AppCompatActivity() {
                     else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 }
 
-                prefs.edit().putInt(KEY_THEME, selectedTheme).apply()
+                prefs.edit { putInt(KEY_THEME, selectedTheme) }
                 AppCompatDelegate.setDefaultNightMode(selectedTheme)
                 dialog.dismiss()
             }

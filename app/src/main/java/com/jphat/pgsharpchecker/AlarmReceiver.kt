@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.edit
 import androidx.work.*
 
 class AlarmReceiver : BroadcastReceiver() {
@@ -35,7 +36,7 @@ class AlarmReceiver : BroadcastReceiver() {
         WorkManager.getInstance(context).enqueue(checkRequest)
         
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis()).apply()
+        prefs.edit { putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis()) }
         
         if (isPeriodic) {
             if (hour != -1 && minute != -1) {

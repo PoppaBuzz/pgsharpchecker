@@ -7,7 +7,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import java.util.Calendar
+import java.util.Locale
 
 class ScheduledChecksActivity : AppCompatActivity() {
     
@@ -40,14 +42,14 @@ class ScheduledChecksActivity : AppCompatActivity() {
             if (scheduledTimes.size < MAX_SCHEDULED_TIMES) {
                 showTimePicker()
             } else {
-                Toast.makeText(this, "Maximum 4 scheduled times allowed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.max_scheduled_times), Toast.LENGTH_SHORT).show()
             }
         }
         
         btnSave.setOnClickListener {
             saveScheduledTimes()
             scheduleAllChecks()
-            Toast.makeText(this, "Scheduled checks saved", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.scheduled_checks_saved), Toast.LENGTH_SHORT).show()
             finish()
         }
         
@@ -73,7 +75,7 @@ class ScheduledChecksActivity : AppCompatActivity() {
         
         if (scheduledTimes.isEmpty()) {
             val emptyText = TextView(this)
-            emptyText.text = "No scheduled checks. Tap 'Add Time' to schedule."
+            emptyText.text = getString(R.string.no_scheduled_checks)
             emptyText.textSize = 14f
             emptyText.setPadding(16, 16, 16, 16)
             llScheduledTimes.addView(emptyText)
@@ -83,7 +85,7 @@ class ScheduledChecksActivity : AppCompatActivity() {
                 val tvTime = timeView.findViewById<TextView>(R.id.tvTime)
                 val btnRemove = timeView.findViewById<Button>(R.id.btnRemove)
                 
-                tvTime.text = String.format("%02d:%02d", time.first, time.second)
+                tvTime.text = String.format(Locale.getDefault(), "%02d:%02d", time.first, time.second)
                 
                 btnRemove.setOnClickListener {
                     scheduledTimes.removeAt(index)
@@ -115,7 +117,7 @@ class ScheduledChecksActivity : AppCompatActivity() {
     private fun saveScheduledTimes() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val timesString = scheduledTimes.joinToString(";") { "${it.first}:${it.second}" }
-        prefs.edit().putString(KEY_SCHEDULED_TIMES, timesString).apply()
+        prefs.edit { putString(KEY_SCHEDULED_TIMES, timesString) }
     }
     
     private fun scheduleAllChecks() {

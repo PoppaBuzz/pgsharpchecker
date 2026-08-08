@@ -38,19 +38,11 @@ object BackgroundCheckScheduler {
         
         val triggerTime = System.currentTimeMillis() + (CHECK_INTERVAL_HOURS * 3600000)
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-        }
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            triggerTime,
+            pendingIntent
+        )
         
         Log.d(TAG, "Scheduled periodic check in $CHECK_INTERVAL_HOURS hours")
     }
@@ -108,19 +100,11 @@ object BackgroundCheckScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                scheduledTime.timeInMillis,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                scheduledTime.timeInMillis,
-                pendingIntent
-            )
-        }
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            scheduledTime.timeInMillis,
+            pendingIntent
+        )
         
         Log.d(TAG, "Scheduled exact check at $hour:$minute")
     }

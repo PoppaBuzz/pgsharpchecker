@@ -15,11 +15,6 @@
     <color name="md_theme_onSurface">#000000</color>
     <color name="md_theme_surfaceVariant">#EEEEEE</color>
     <color name="md_theme_onSurfaceVariant">#444444</color>
-    <color name="md_theme_surfaceContainer">#F5F5F5</color>
-    <color name="md_theme_surfaceContainerLow">#FAFAFA</color>
-
-    <color name="md_theme_outline">#79747E</color>
-    <color name="md_theme_outlineVariant">#C4C7CF</color>
 
     <!-- Status colors -->
     <color name="status_success">#4CAF50</color>

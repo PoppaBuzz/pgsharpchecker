@@ -1,14 +1,15 @@
 # PGSharp Version Checker
 
-An Android app that monitors your installed Pokemon Go version and compares it against the latest version supported by PGSharp.
+An Android app that monitors your installed Pokémon GO version and compares it against the latest version supported by PGSharp.
 
 ## Features
 
-- 🔍 **Automatic Detection** - Detects your installed Pokemon Go version
+- 🔍 **Automatic Detection** - Detects your installed Pokémon GO version
 - 🌐 **Web Scraping** - Fetches the latest supported version from pgsharp.com
 - 🔔 **Notifications** - Alerts you when there's a version mismatch
 - ⏰ **Background Checking** - Automatic checks every 12 hours
 - 📱 **Manual Check** - Check for updates anytime with one tap
+- ⬇️ **One-Tap Update** - Opens straight on the **Download** button when a newer version is available, and tapping the update notification takes you right to the PGSharp download page
 
 ## Screenshots
 
@@ -22,8 +23,8 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 
 ## How It Works
 
-1. The app reads your installed Pokemon Go version from the package manager
-2. It scrapes pgsharp.com to get the latest Pokemon Go version that PGSharp supports
+1. The app reads your installed Pokémon GO version from the package manager
+2. It scrapes pgsharp.com to get the latest Pokémon GO version that PGSharp supports
 3. Compares the two versions and notifies you if they differ
 4. Runs automatic checks in the background every 12 hours (optional)
 
@@ -34,7 +35,7 @@ An Android app that monitors your installed Pokemon Go version and compares it a
 - PGSharp installed on your device
 
 ### Install from APK
-1. Download the latest APK from the [Releases](../../releases) page
+1. Download the latest APK (**v1.3**): [pgsharpchecker-v1.3.apk](https://github.com/PoppaBuzz/pgsharpchecker/releases/download/v1.3/pgsharpchecker-v1.3.apk) — or browse all versions on the [Releases](https://github.com/PoppaBuzz/pgsharpchecker/releases) page
 2. Enable "Install from Unknown Sources" in your Android settings
 3. Install the APK
 4. Grant notification permissions when prompted
@@ -55,15 +56,16 @@ The app requires the following permissions:
 
 - **INTERNET** - To fetch version information from pgsharp.com
 - **POST_NOTIFICATIONS** - To send update notifications
-- **Package Visibility** - Uses `<queries>` to detect Pokemon Go (less invasive than QUERY_ALL_PACKAGES)
+- **Package Visibility** - Uses `<queries>` to detect Pokémon GO (less invasive than QUERY_ALL_PACKAGES)
 
 ## Usage
 
 1. Open the app
-2. The app will automatically detect your Pokemon Go version
+2. The app will automatically detect your Pokémon GO version
 3. Tap "Check for Updates Now" to manually check the latest version
 4. Tap "Enable Automatic Checking" to enable background checks every 12 hours
 5. You'll receive a notification if your version differs from PGSharp's supported version
+6. When a newer version is available, the app shows a **Download Update** button right on launch — and tapping the notification jumps straight to the download page
 
 ## Technical Details
 
@@ -87,8 +89,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Disclaimer
 
-This app is not affiliated with, endorsed by, or connected to Niantic, Pokemon Go, or PGSharp. It is an independent tool created for informational purposes only.
+This app is not affiliated with, endorsed by, or connected to Niantic, Pokémon GO, or PGSharp. It is an independent tool created for informational purposes only.
 
 ## Support
 
-If you encounter any issues or have suggestions, please [open an issue](../../issues).
+If you encounter any issues or have suggestions, please [open an issue](https://github.com/PoppaBuzz/pgsharpchecker/issues).

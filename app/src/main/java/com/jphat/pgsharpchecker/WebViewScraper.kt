@@ -1,5 +1,6 @@
 package com.jphat.pgsharpchecker
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -14,7 +15,11 @@ import kotlin.coroutines.resumeWithException
 /**
  * WebView-based scraper to bypass Cloudflare and other bot protections.
  * Uses Android's WebView which is recognized as a legitimate browser by most websites.
+ * JavaScript is deliberately enabled: the target site requires it to render
+ * (and to pass its bot-protection challenge), so the XSS risk is accepted
+ * because only pgsharp.com is ever loaded and no remote content is injected.
  */
+@SuppressLint("SetJavaScriptEnabled")
 class WebViewScraper(private val context: Context) {
     
     companion object {

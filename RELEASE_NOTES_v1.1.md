@@ -21,7 +21,7 @@ November 23, 2025
 - Better color contrast ratios for accessibility compliance
 
 ## Download
-[pgsharpchecker-v1.1.apk](app/release/pgsharpchecker-v1.1.apk) (6.4 MB)
+[pgsharpchecker-v1.1.apk](https://github.com/PoppaBuzz/pgsharpchecker/releases) (6.4 MB)
 
 ## Installation
 1. Download the APK file
@@ -35,4 +35,4 @@ November 23, 2025
 
 ---
 
-**Note**: This app is not affiliated with, endorsed by, or connected to Niantic, Pokemon Go, or PGSharp. It is an independent tool created for informational purposes only.
+**Note**: This app is not affiliated with, endorsed by, or connected to Niantic, Pokémon GO, or PGSharp. It is an independent tool created for informational purposes only.
