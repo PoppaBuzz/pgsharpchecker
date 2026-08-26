@@ -99,4 +99,10 @@
     <string name="unable_to_check_for_updates_please_try_again">Unable to check for updates. Please try again.</string>
     <string name="checking_for_updates">Checking for updates…</string>
     <string name="your_pokemon_go_version_matches_pgsharp">Your Pokémon GO version matches PGSharp!</string>
+    
+    <!-- Alarm permission dialog -->
+    <string name="alarm_permission_title">Alarm Permission Needed</string>
+    <string name="alarm_permission_message">To check for updates automatically at the scheduled times, this app needs permission to set alarms and reminders. Without it, scheduled checks may be delayed or missed.</string>
+    <string name="alarm_permission_allow">Allow</string>
+    <string name="alarm_permission_deny">Not Now</string>
 </resources>

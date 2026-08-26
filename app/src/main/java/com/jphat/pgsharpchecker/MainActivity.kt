@@ -96,8 +96,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
-        requestExactAlarmPermission()
-        
         // Load saved auto-check state
         loadAutoCheckState()
         
@@ -398,6 +396,27 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun schedulePeriodicVersionCheck() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.alarm_permission_title)
+                    .setMessage(R.string.alarm_permission_message)
+                    .setPositiveButton(R.string.alarm_permission_allow) { _, _ ->
+                        requestExactAlarmPermission()
+                        enablePeriodicAfterPermission()
+                    }
+                    .setNegativeButton(R.string.alarm_permission_deny) { _, _ ->
+                        enablePeriodicAfterPermission()
+                    }
+                    .show()
+                return
+            }
+        }
+        enablePeriodicAfterPermission()
+    }
+
+    private fun enablePeriodicAfterPermission() {
         BackgroundCheckScheduler.schedulePeriodicCheck(this)
         
         saveAutoCheckState(true)

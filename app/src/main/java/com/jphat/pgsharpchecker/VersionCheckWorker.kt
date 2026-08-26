@@ -11,6 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.net.HttpURLConnection
+import java.net.URL
 
 class VersionCheckWorker(
     context: Context,
@@ -25,6 +27,8 @@ class VersionCheckWorker(
             "com.nianticproject.holoholo"   // Legacy Pokémon GO
         )
         private const val PGSHARP_URL = "https://www.pgsharp.com"
+        private const val PGSHARP_DOWNLOAD_URL = "https://api.pgsharp.com/download"
+        private const val MAX_REDIRECTS = 10
 
         /**
          * Compare two dot-separated version strings (e.g. "0.385.2").
@@ -70,9 +74,14 @@ class VersionCheckWorker(
                 )
             }
             
-            // Get latest version from website
-            var latestVersion = getLatestVersionFromWebsite()
-            
+            // Get latest version from download URL redirect chain (source of truth)
+            var latestVersion = getLatestVersionFromDownloadLink()
+
+            if (latestVersion == null) {
+                Log.w(TAG, "Download link parsing failed, trying page scrape...")
+                latestVersion = getLatestVersionFromWebsite()
+            }
+
             // If web scraping fails, try alternative method
             if (latestVersion == null) {
                 Log.w(TAG, "Primary scraping failed, trying alternative...")
@@ -151,9 +160,55 @@ class VersionCheckWorker(
         return Jsoup.parse(html, url)
     }
 
-    /**
-     * Scrape the latest version from pgsharp.com using WebView and Jsoup
-     */
+    private suspend fun getLatestVersionFromDownloadLink(): String? = withContext(Dispatchers.IO) {
+        try {
+            var connection = URL(PGSHARP_DOWNLOAD_URL).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.setRequestProperty("User-Agent",
+                "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+
+            var redirectCount = 0
+            while (redirectCount < MAX_REDIRECTS) {
+                val code = connection.responseCode
+                if (code in 301..308) {
+                    val location = connection.getHeaderField("Location") ?: break
+                    connection.disconnect()
+                    connection = URL(location).openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.instanceFollowRedirects = false
+                    connection.connectTimeout = 10000
+                    connection.readTimeout = 10000
+                    connection.setRequestProperty("User-Agent",
+                        "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
+                    redirectCount++
+                    Log.d(TAG, "Redirect $redirectCount -> $location")
+                } else {
+                    break
+                }
+            }
+
+            val finalUrl = connection.url.toString()
+            connection.disconnect()
+            Log.d(TAG, "Download URL resolved to: $finalUrl")
+
+            val match = Regex("""pgs[\d.]+_(\d+\.\d+\.\d+)""").find(finalUrl)
+            if (match != null) {
+                val version = match.groupValues[1]
+                Log.d(TAG, "Parsed Pokemon GO version from download URL: $version")
+                return@withContext version
+            }
+
+            Log.w(TAG, "No version pattern found in final URL: $finalUrl")
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Download link parsing failed: ${e.message}", e)
+            null
+        }
+    }
+
     private suspend fun getLatestVersionFromWebsite(): String? = withContext(Dispatchers.IO) {
         try {
             // Connect to the website and parse HTML using WebView

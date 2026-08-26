@@ -38,8 +38,8 @@ class WebViewScraper(private val context: Context) {
         mainHandler.post {
             try {
                 val webView = WebView(context)
-                var pageLoaded = false
                 var timeoutReached = false
+                var extracted = false
                 
                 // Configure WebView settings
                 webView.settings.apply {
@@ -47,45 +47,54 @@ class WebViewScraper(private val context: Context) {
                     domStorageEnabled = true
                     // Allow mixed content if needed
                     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                    // Force fresh fetch every time – stale cached HTML means a stale version number
+                    cacheMode = android.webkit.WebSettings.LOAD_NO_CACHE
                     // Set user agent to mimic browser
                     userAgentString = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
                 }
                 
-                // Set a custom WebViewClient to handle page loading
+                var extractionRunnable: Runnable? = null
+
+                fun extractHtml(view: WebView?, pageUrl: String?) {
+                    if (extracted || timeoutReached) return
+                    extracted = true
+                    Log.d(TAG, "Extracting HTML from: $pageUrl")
+
+                    view?.evaluateJavascript("(function() { return document.documentElement.outerHTML; })()") { html ->
+                        try {
+                            val cleanHtml = if (html != null && html.startsWith("\"") && html.endsWith("\"")) {
+                                html.substring(1, html.length - 1)
+                                    .replace("\\\"", "\"")
+                                    .replace("\\n", "\n")
+                                    .replace("\\t", "\t")
+                                    .replace("\\\\", "\\")
+                            } else {
+                                html ?: ""
+                            }
+
+                            Log.d(TAG, "Successfully extracted HTML, length: ${cleanHtml.length}")
+                            webView.stopLoading()
+                            webView.destroy()
+                            continuation.resume(cleanHtml)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error processing HTML: ${e.message}", e)
+                            webView.destroy()
+                            continuation.resumeWithException(e)
+                        }
+                    }
+                }
+
                 webView.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
-                        if (!pageLoaded && !timeoutReached) {
-                            pageLoaded = true
-                            Log.d(TAG, "Page finished loading: $url")
-                            
-                            // Extract the HTML content
-                            view?.evaluateJavascript("(function() { return document.documentElement.outerHTML; })()") { html ->
-                                try {
-                                    // Remove quotes added by evaluateJavascript
-                                    val cleanHtml = if (html != null && html.startsWith("\"") && html.endsWith("\"")) {
-                                        html.substring(1, html.length - 1)
-                                            .replace("\\\"", "\"")
-                                            .replace("\\n", "\n")
-                                            .replace("\\t", "\t")
-                                            .replace("\\\\", "\\")
-                                    } else {
-                                        html ?: ""
-                                    }
-                                    
-                                    Log.d(TAG, "Successfully extracted HTML, length: ${cleanHtml.length}")
-                                    webView.stopLoading()
-                                    webView.destroy()
-                                    continuation.resume(cleanHtml)
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "Error processing HTML: ${e.message}", e)
-                                    webView.destroy()
-                                    continuation.resumeWithException(e)
-                                }
-                            }
+                        if (!extracted && !timeoutReached) {
+                            extractionRunnable?.let { mainHandler.removeCallbacks(it) }
+                            val runnable = Runnable { extractHtml(view, url) }
+                            extractionRunnable = runnable
+                            mainHandler.postDelayed(runnable, 2000)
                         }
                     }
-                    
+
                     override fun onReceivedError(
                         view: WebView?,
                         request: android.webkit.WebResourceRequest?,
@@ -93,7 +102,7 @@ class WebViewScraper(private val context: Context) {
                     ) {
                         super.onReceivedError(view, request, error)
                         Log.e(TAG, "WebView error: ${error?.description}, URL: ${request?.url}")
-                        if (!pageLoaded && !timeoutReached && request?.url.toString() == url) {
+                        if (!extracted && !timeoutReached && request?.url.toString() == url) {
                             timeoutReached = true
                             webView.destroy()
                             continuation.resumeWithException(
@@ -102,15 +111,13 @@ class WebViewScraper(private val context: Context) {
                         }
                     }
                 }
-                
-                // Start loading the page
+
                 Log.d(TAG, "Starting to load: $url")
                 webView.loadUrl(url)
-                
-                // Set a timeout to prevent indefinite waiting
+
                 val timeoutThread = Thread {
                     Thread.sleep(LOAD_TIMEOUT_MS)
-                    if (!pageLoaded && !timeoutReached) {
+                    if (!extracted && !timeoutReached) {
                         timeoutReached = true
                         Log.w(TAG, "Page load timeout reached for: $url")
                         mainHandler.post {
